@@ -1,4 +1,4 @@
-import {createRouter, createWebHistory} from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -25,6 +25,17 @@ const router = createRouter({
     },
     { path: '/login', component: () => import('@/views/Login.vue')},
     { path: '/register', component: () => import('@/views/Register.vue')},
+    // 添加忘记密码和重置密码路由
+    {
+      path: '/forgotPassword',
+      name: 'ForgotPassword',
+      component: () => import('@/views/ForgotPassword.vue')
+    },
+    {
+      path: '/resetPassword',
+      name: 'ResetPassword',
+      component: () => import('@/views/ResetPassword.vue')
+    }
   ]
 })
 

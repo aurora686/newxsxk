@@ -6,31 +6,31 @@
       </div>
       <el-form :model="data.form" ref="formRef" :rules="data.rules" class="login-form">
         <el-form-item prop="username">
-          <el-input 
-            :prefix-icon="User" 
-            size="large" 
-            v-model="data.form.username" 
-            placeholder="请输入账号" 
-            class="custom-input"
+          <el-input
+              :prefix-icon="User"
+              size="large"
+              v-model="data.form.username"
+              placeholder="请输入账号"
+              class="custom-input"
           />
         </el-form-item>
         <el-form-item prop="password">
-          <el-input 
-            :prefix-icon="Lock" 
-            size="large" 
-            v-model="data.form.password" 
-            placeholder="请输入密码" 
-            show-password 
-            class="custom-input"
+          <el-input
+              :prefix-icon="Lock"
+              size="large"
+              v-model="data.form.password"
+              placeholder="请输入密码"
+              show-password
+              class="custom-input"
           />
         </el-form-item>
         <el-form-item prop="role">
-          <el-select 
-            size="large" 
-            style="width: 100%" 
-            v-model="data.form.role" 
-            placeholder="请选择您的身份"
-            class="custom-select"
+          <el-select
+              size="large"
+              style="width: 100%"
+              v-model="data.form.role"
+              placeholder="请选择您的身份"
+              class="custom-select"
           >
             <el-option value="ADMIN" label="管理员"></el-option>
             <el-option value="TEACHER" label="教师"></el-option>
@@ -38,70 +38,76 @@
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button 
-            size="large" 
-            type="primary" 
-            class="login-button" 
-            @click="login"
+          <el-button
+              size="large"
+              type="primary"
+              class="login-button"
+              @click="login"
           >登 录</el-button>
         </el-form-item>
       </el-form>
-      <div class="register-link">
-        还没有账号？请 <router-link to="/register" class="register-text">注册</router-link>
+
+      <!-- 优化后的链接布局 -->
+      <div class="link-group">
+        <div class="forgot-password-link">
+          <router-link to="/forgotPassword" class="forgot-password-text">忘记密码</router-link>
+        </div>
+        <div class="register-link">
+          还没有账号？请 <router-link to="/register" class="register-text">注册</router-link>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-  import { reactive, ref } from "vue";
-  import { User, Lock } from "@element-plus/icons-vue";
-  import request from "@/utils/request";
-  import {ElMessage} from "element-plus";
-  import router from "@/router";
+import { reactive, ref } from "vue";
+import { User, Lock } from "@element-plus/icons-vue";
+import request from "@/utils/request";
+import { ElMessage } from "element-plus";
+import router from "@/router";
 
-  const data = reactive({
-    form: {},
-    rules: {
-      username: [
-        { required: true, message: '请输入账号', trigger: 'blur' },
-      ],
-      password: [
-        { required: true, message: '请输入密码', trigger: 'blur' },
-      ],
-      role: [
-        { required: true, message: '请选择身份', trigger: 'change' },
-      ]
-    }
-  })
-
-  const formRef = ref()
-
-  // 点击登录按钮的时候会触发这个方法
-  const login = () => {
-    formRef.value.validate((valid => {
-      if (valid) {
-        // 调用后台的接口
-        request.post('/login', data.form).then(res => {
-          if (res.code === '200') {
-            // 只有当返回的数据不为空时才算登录成功
-            if (res.data) {
-              ElMessage.success("登录成功")
-              router.push('/')
-              localStorage.setItem('system-user', JSON.stringify(res.data))
-            } else {
-              ElMessage.error("用户名、密码或身份类型错误")
-            }
-          } else {
-            ElMessage.error(res.msg)
-          }
-        })
-      }
-    })).catch(error => {
-      console.error(error)
-    })
+const data = reactive({
+  form: {},
+  rules: {
+    username: [
+      { required: true, message: '请输入账号', trigger: 'blur' },
+    ],
+    password: [
+      { required: true, message: '请输入密码', trigger: 'blur' },
+    ],
+    role: [
+      { required: true, message: '请选择身份', trigger: 'change' },
+    ]
   }
+})
 
+const formRef = ref()
+
+// 点击登录按钮的时候会触发这个方法
+const login = () => {
+  formRef.value.validate((valid => {
+    if (valid) {
+      // 调用后台的接口
+      request.post('/login', data.form).then(res => {
+        if (res.code === '200') {
+          // 只有当返回的数据不为空时才算登录成功
+          if (res.data) {
+            ElMessage.success("登录成功")
+            router.push('/')
+            localStorage.setItem('system-user', JSON.stringify(res.data))
+          } else {
+            ElMessage.error("用户名、密码或身份类型错误")
+          }
+        } else {
+          ElMessage.error(res.msg)
+        }
+      })
+    }
+  })).catch(error => {
+    console.error(error)
+  })
+}
 </script>
 
 <style scoped>
@@ -203,20 +209,26 @@
   box-shadow: 0 2px 6px rgba(20, 80, 170, 0.2);
 }
 
-.register-link {
-  text-align: right;
+/* 优化后的链接样式 */
+.link-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.register-link, .forgot-password-link {
   color: #666;
   font-size: 14px;
 }
 
-.register-text {
+.register-text, .forgot-password-text {
   color: #1450aa;
   font-weight: 500;
   text-decoration: none;
   transition: all 0.3s;
 }
 
-.register-text:hover {
+.register-text:hover, .forgot-password-text:hover {
   color: #0d3d8a;
   text-decoration: underline;
 }
