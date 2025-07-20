@@ -83,6 +83,15 @@ public class TeacherService {
         teacherMapper.updateById(dbTeacher);
     }
 
+    public void resetPassword(Account account) {
+        Teacher dbTeacher = teacherMapper.selectByUsername(account.getUsername());
+        if (dbTeacher == null) {
+            throw new CustomException("用户不存在");
+        }
+        dbTeacher.setPassword(account.getNewPassword());
+        teacherMapper.updateById(dbTeacher);
+    }
+
     public List<Teacher> selectAll() {
         return teacherMapper.selectAll();
     }
