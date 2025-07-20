@@ -105,4 +105,12 @@ public class AdminService {
         adminMapper.updateById(dbAdmin);
     }
 
+    public void resetPassword(Account account) {
+        Admin dbAdmin = adminMapper.selectByUsername(account.getUsername());
+        if (dbAdmin == null) {
+            throw new CustomException("用户不存在");
+        }
+        dbAdmin.setPassword(account.getNewPassword());
+        adminMapper.updateById(dbAdmin);
+    }
 }
