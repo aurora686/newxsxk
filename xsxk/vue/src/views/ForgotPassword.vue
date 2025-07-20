@@ -16,11 +16,11 @@
         </el-form-item>
         <el-form-item prop="captcha">
           <el-input
-              :prefix-icon="VerificationCode"
-              size="large"
-              v-model="data.form.captcha"
-              placeholder="请输入验证码"
-              class="custom-input"
+              :prefix-icon="Document"
+          size="large"
+          v-model="data.form.captcha"
+          placeholder="请输入验证码"
+          class="custom-input"
           />
           <img :src="captchaUrl" @click="refreshCaptcha" style="margin-left: 10px; cursor: pointer;" />
         </el-form-item>
@@ -39,12 +39,12 @@
 
 <script setup>
 import { reactive, ref } from "vue";
-import { User, VerificationCode } from "@element-plus/icons-vue";
+import { User, Document } from "@element-plus/icons-vue";  // 修改导入的图标
 import request from "@/utils/request";
 import { ElMessage } from "element-plus";
 import router from "@/router";
 
-// 组件名称定义 (替代原来的 export default { name: "ForgotPassword" })
+// 组件名称定义
 defineOptions({
   name: "ForgotPassword"
 })
