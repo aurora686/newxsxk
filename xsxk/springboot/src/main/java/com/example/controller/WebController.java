@@ -88,4 +88,13 @@ public class WebController {
         return Result.success();
     }
 
+    /**
+     * 获取验证码
+     */
+    @GetMapping("/getCaptcha")
+    public Result getCaptcha() {
+        String captcha = CaptchaUtils.generateTextCaptcha();
+        return Result.success(captcha);
+    }
+
 }
