@@ -1,5 +1,6 @@
 package com.example.controller;
 
+import com.example.common.CaptchaUtils;
 import com.example.common.Result;
 import com.example.entity.Account;
 import com.example.exception.CustomException;
@@ -8,6 +9,10 @@ import com.example.service.StudentService;
 import com.example.service.TeacherService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
+
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 
 @RestController
