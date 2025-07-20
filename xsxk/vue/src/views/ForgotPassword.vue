@@ -17,12 +17,21 @@
         <el-form-item prop="captcha">
           <el-input
               :prefix-icon="Document"
-          size="large"
-          v-model="data.form.captcha"
-          placeholder="请输入验证码"
-          class="custom-input"
+              size="large"
+              v-model="data.form.captcha"
+              placeholder="请输入验证码"
+              class="custom-input"
           />
-          <img :src="captchaUrl" @click="refreshCaptcha" style="margin-left: 10px; cursor: pointer;" />
+          <!-- 使用卡片显示文本验证码 -->
+          <el-card
+              class="captcha-card"
+              shadow="hover"
+              :body-style="{ padding: '0px', 'text-align': 'center' }"
+              @click="refreshCaptcha"
+              :loading="isLoading"
+          >
+            <span class="captcha-text">{{ captchaText }}</span>
+          </el-card>
         </el-form-item>
         <el-form-item>
           <el-button
@@ -38,8 +47,8 @@
 </template>
 
 <script setup>
-import { reactive, ref } from "vue";
-import { User, Document } from "@element-plus/icons-vue";  // 修改导入的图标
+import { reactive, ref, onMounted } from "vue";
+import { User, Document } from "@element-plus/icons-vue";
 import request from "@/utils/request";
 import { ElMessage } from "element-plus";
 import router from "@/router";
@@ -50,7 +59,10 @@ defineOptions({
 })
 
 const data = reactive({
-  form: {},
+  form: {
+    username: '',
+    captcha: ''
+  },
   rules: {
     username: [
       { required: true, message: '请输入账号', trigger: 'blur' },
@@ -62,10 +74,35 @@ const data = reactive({
 });
 
 const formRef = ref();
-const captchaUrl = ref(import.meta.env.VITE_BASE_URL + '/captcha');
+const captchaText = ref('点击获取验证码'); // 存储验证码文本
+const isLoading = ref(false); // 加载状态
 
-const refreshCaptcha = () => {
-  captchaUrl.value = import.meta.env.VITE_BASE_URL + '/captcha?' + new Date().getTime();
+// 页面加载时获取验证码
+onMounted(() => {
+  refreshCaptcha();
+});
+
+// 获取验证码
+const refreshCaptcha = async () => {
+  isLoading.value = true;
+
+  try {
+    // 发送请求获取验证码
+    const res = await request.get('/captcha');
+
+    if (res.code === '200') {
+      // 从响应中获取验证码文本
+      captchaText.value = res.data.captcha;
+      ElMessage.success('验证码已刷新');
+    } else {
+      ElMessage.error(res.msg || '获取验证码失败');
+    }
+  } catch (error) {
+    console.error('获取验证码出错:', error);
+    ElMessage.error('获取验证码失败，请稍后再试');
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const verifyCaptcha = () => {
@@ -74,7 +111,7 @@ const verifyCaptcha = () => {
       request.post('/verifyCaptcha', data.form).then(res => {
         if (res.code === '200') {
           ElMessage.success("验证成功");
-          router.push({ name: 'ResetPassword', query: { username: data.form.username } });
+          router.push({ name: 'ResetPassword', query: {username: data.form.username}});
         } else {
           ElMessage.error(res.msg);
         }
@@ -137,5 +174,28 @@ const verifyCaptcha = () => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   padding: 2px 12px;
   transition: all 0.3s;
+}
+
+/* 新增验证码卡片样式 */
+.captcha-card {
+  width: 120px;
+  height: 40px;
+  margin-left: 10px;
+  display: inline-block;
+  vertical-align: middle;
+  cursor: pointer;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+
+.captcha-text {
+  display: block;
+  line-height: 40px;
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+  font-weight: bold;
+  color: #303133;
+  letter-spacing: 2px;
+  user-select: none; /* 禁止选中验证码文本 */
 }
 </style>
