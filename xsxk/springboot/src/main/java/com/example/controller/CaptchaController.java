@@ -17,22 +17,14 @@ public class CaptchaController {
     /**
      * 生成验证码
      */
-    @GetMapping
-    public Result generateCaptcha(@RequestParam String sessionId) {
-        try {
-            // 生成验证码
-            String captcha = CaptchaUtils.generateTextCaptcha();
-            // 存储验证码到模拟存储中
-            captchaStore.put(sessionId, captcha);
-            // 实际应用中可返回图片，这里为了方便测试直接返回验证码
-            Map<String, String> result = new HashMap<>();
-            result.put("captcha", captcha);
-            return Result.success(result);
-        } catch (Exception e) {
-            // 打印异常信息，方便排查问题
-            e.printStackTrace();
-            return Result.error("获取验证码失败，请稍后再试呀");
-        }
+    @GetMapping("/captcha")
+    public Result generateCaptcha(HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        // 使用 session 存储验证码
+        String captcha = CaptchaUtils.generateTextCaptcha();
+        session.setAttribute("captcha", captcha);
+
+        return Result.success(captcha);
     }
 
     /**
