@@ -98,6 +98,16 @@ public class StudentService {
         studentMapper.updateById(dbStudent);
     }
 
+
+    public void resetPassword(Account account) {
+        Student dbStudent = studentMapper.selectByUsername(account.getUsername());
+        if (dbStudent == null) {
+            throw new CustomException("用户不存在");
+        }
+        dbStudent.setPassword(account.getNewPassword());
+        studentMapper.updateById(dbStudent);
+    }
+
     public Student selectById(Integer id) {
         return studentMapper.selectById(id);
     }
