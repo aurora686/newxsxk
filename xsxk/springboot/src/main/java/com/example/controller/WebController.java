@@ -15,6 +15,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+
+
 @RestController
 public class WebController {
 
@@ -100,6 +105,30 @@ public class WebController {
     public Result getCaptcha() {
         String captcha = CaptchaUtils.generateTextCaptcha();
         return Result.success(captcha);
+    }
+
+
+    /**
+     * 重置密码
+     */
+    @PutMapping("/resetPassword")
+    public Result resetPassword(@RequestBody Account account) {
+        try {
+            if ("ADMIN".equals(account.getRole())) {
+                adminService.resetPassword(account);
+            } else if ("TEACHER".equals(account.getRole())) {
+                teacherService.resetPassword(account);
+            } else if ("STUDENT".equals(account.getRole())) {
+                studentService.resetPassword(account);
+            } else {
+                return Result.error("无效的身份类型");
+            }
+            return Result.success();
+        } catch (CustomException e) {
+            return Result.error(e.getMsg());
+        } catch (Exception e) {
+            return Result.error("重置密码失败，请稍后再试");
+        }
     }
 
 }
