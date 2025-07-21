@@ -17,7 +17,7 @@ public class CaptchaController {
     /**
      * 生成验证码
      */
-    @GetMapping("/captcha")
+    @GetMapping("")
     public Result generateCaptcha(HttpServletRequest request) {
         HttpSession session = request.getSession();
         // 使用 session 存储验证码
