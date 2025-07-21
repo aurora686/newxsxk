@@ -137,7 +137,7 @@ const verifyCaptcha = () => {
       try {
         // 携带sessionId、用户名、输入的验证码到后端验证
         const res = await request.post('/captcha/verify', {
-          sessionId: data.form.sessionId, // 关键：传递获取验证码时的sessionId
+          sessionId: data.form.sessionId,
           username: data.form.username,
           captcha: data.form.captcha
         });
@@ -147,7 +147,10 @@ const verifyCaptcha = () => {
           // 验证成功，携带用户名跳转到重置密码页
           router.push({
             name: 'ResetPassword',
-            query: { username: data.form.username }
+            query: {username: data.form.username}
+          }).catch((error) => {
+            console.error('路由跳转出错:', error);
+            ElMessage.error('路由跳转失败，请检查路由配置');
           });
         } else {
           // 验证失败（如验证码错误/过期）
