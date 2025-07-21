@@ -4,7 +4,13 @@
       <div class="forgot-password-title">
         <span class="system-name">忘记密码</span>
       </div>
-      <el-form :model="data.form" ref="formRef" :rules="data.rules" class="forgot-password-form">
+      <el-form
+          :model="data.form"
+          ref="formRef"
+          :rules="data.rules"
+          class="forgot-password-form"
+      >
+        <!-- 用户名输入 -->
         <el-form-item prop="username">
           <el-input
               :prefix-icon="User"
@@ -14,6 +20,8 @@
               class="custom-input"
           />
         </el-form-item>
+
+        <!-- 验证码输入及获取 -->
         <el-form-item prop="captcha">
           <el-input
               :prefix-icon="Document"
@@ -22,7 +30,7 @@
               placeholder="请输入验证码"
               class="custom-input"
           />
-          <!-- 使用卡片显示文本验证码 -->
+          <!-- 验证码卡片（点击刷新） -->
           <el-card
               class="captcha-card"
               shadow="hover"
@@ -30,9 +38,11 @@
               @click="refreshCaptcha"
               :loading="isLoading"
           >
-            <span class="captcha-text">{{ captchaText }}</span>
+            <span class="captcha-text">{{ captchaText || '点击获取' }}</span>
           </el-card>
         </el-form-item>
+
+        <!-- 验证按钮 -->
         <el-form-item>
           <el-button
               size="large"
@@ -56,12 +66,14 @@ import router from "@/router";
 // 组件名称定义
 defineOptions({
   name: "ForgotPassword"
-})
+});
 
+// 响应式数据
 const data = reactive({
   form: {
-    username: '',
-    captcha: ''
+    username: '',      // 用户名
+    captcha: '',       // 用户输入的验证码
+    sessionId: ''      // 存储后端返回的唯一sessionId（关键：用于匹配验证码）
   },
   rules: {
     username: [
@@ -73,49 +85,84 @@ const data = reactive({
   }
 });
 
-const formRef = ref();
-const captchaText = ref('点击获取验证码'); // 存储验证码文本
+// 其他状态
+const formRef = ref();       // 表单引用
+const captchaText = ref(''); // 显示的验证码文本（后端返回）
 const isLoading = ref(false); // 加载状态
 
-// 页面加载时获取验证码
+// 页面加载时自动获取验证码
 onMounted(() => {
   refreshCaptcha();
 });
 
-// 获取验证码
+/**
+ * 获取验证码（核心：从后端获取验证码和sessionId）
+ */
 const refreshCaptcha = async () => {
   isLoading.value = true;
-
   try {
-    // 发送请求获取验证码
+    // 调用后端生成验证码接口
     const res = await request.get('/captcha');
 
-    if (res.code === '200') {
-      // 从响应中获取验证码文本
+    // 验证后端响应（适配数字/字符串状态码）
+    if (res.code === 200 || res.code === '200') {
+      // 存储后端返回的sessionId（用于后续验证）
+      data.form.sessionId = res.data.sessionId;
+      // 显示验证码文本（仅前端显示，实际验证以后端存储为准）
       captchaText.value = res.data.captcha;
       ElMessage.success('验证码已刷新');
     } else {
       ElMessage.error(res.msg || '获取验证码失败');
+      captchaText.value = '获取失败';
     }
   } catch (error) {
     console.error('获取验证码出错:', error);
-    ElMessage.error('获取验证码失败，请稍后再试');
+    captchaText.value = '点击重试';
+    ElMessage.error(
+        error.response?.data?.msg || '网络错误，请稍后再试'
+    );
   } finally {
     isLoading.value = false;
   }
 };
 
+/**
+ * 验证验证码（核心：携带sessionId到后端验证）
+ */
 const verifyCaptcha = () => {
-  formRef.value.validate((valid) => {
+  // 先验证表单格式
+  formRef.value.validate(async (valid) => {
     if (valid) {
-      request.post('/verifyCaptcha', data.form).then(res => {
-        if (res.code === '200') {
-          ElMessage.success("验证成功");
-          router.push({ name: 'ResetPassword', query: {username: data.form.username}});
+      isLoading.value = true;
+      try {
+        // 携带sessionId、用户名、输入的验证码到后端验证
+        const res = await request.post('/captcha/verify', {
+          sessionId: data.form.sessionId, // 关键：传递获取验证码时的sessionId
+          username: data.form.username,
+          captcha: data.form.captcha
+        });
+
+        if (res.code === 200 || res.code === '200') {
+          ElMessage.success("验证成功，即将跳转");
+          // 验证成功，携带用户名跳转到重置密码页
+          router.push({
+            name: 'ResetPassword',
+            query: { username: data.form.username }
+          });
         } else {
-          ElMessage.error(res.msg);
+          // 验证失败（如验证码错误/过期）
+          ElMessage.error(res.msg || '验证失败');
+          // 自动刷新验证码，避免重复使用
+          refreshCaptcha();
         }
-      });
+      } catch (error) {
+        console.error('验证验证码出错:', error);
+        ElMessage.error(
+            error.response?.data?.msg || '验证请求失败'
+        );
+      } finally {
+        isLoading.value = false;
+      }
     }
   });
 };
@@ -176,7 +223,7 @@ const verifyCaptcha = () => {
   transition: all 0.3s;
 }
 
-/* 新增验证码卡片样式 */
+/* 验证码卡片样式 */
 .captcha-card {
   width: 120px;
   height: 40px;
@@ -197,5 +244,9 @@ const verifyCaptcha = () => {
   color: #303133;
   letter-spacing: 2px;
   user-select: none; /* 禁止选中验证码文本 */
+}
+
+.forgot-password-button {
+  width: 100%;
 }
 </style>
