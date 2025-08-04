@@ -75,7 +75,9 @@ const formRef = ref();
 const resetPassword = () => {
   formRef.value.validate((valid) => {
     if (valid) {
-      request.post('/resetPassword', data.form).then(res => {
+      // 确保 data.form 中包含 role 字段
+      data.form.role = 'STUDENT'; // 根据实际情况修改角色
+      request.post('/captcha/resetPassword', data.form).then(res => {
         if (res.code === '200') {
           ElMessage.success("密码重置成功，请重新登录");
           router.push('/login');
